@@ -31,7 +31,21 @@ class Loaders::PageLoader
       items = ul.xpath(".//li")
 
       items.each do |item|
+        c = Coutry.new
 
+        c.link = item.xpath(".//b/a/@href")
+        c.link ||= item.xpath(".//a/@href")
+
+        c.name = item.xpath(".//a[last()]/@title")
+
+        c.link ||= item.xpath(".//i/a/@href")
+
+        if c.name.nil?
+          c.name = item.xpath(".//i/text()")
+          c.name.sub!(/^See\s+for\s*/, '')
+        end
+
+        c.save!
       end
     end
   end
