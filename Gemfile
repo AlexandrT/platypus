@@ -42,3 +42,4 @@ gem 'pundit'
 gem "slim-rails"
 gem 'globalize', git: 'https://github.com/globalize/globalize'
 gem 'activemodel-serializers-xml'
+gem 'httparty'

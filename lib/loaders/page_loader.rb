@@ -1,7 +1,7 @@
 require 'httparty'
 require 'nokogiri'
 
-class Loaders::PageLoader
+class PageLoader
   include HTTParty
 
   headers 'User-Agent' => 'Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)'
@@ -31,21 +31,33 @@ class Loaders::PageLoader
       items = ul.xpath(".//li")
 
       items.each do |item|
-        c = Coutry.new
+        country = Country.new
 
-        c.link = item.xpath(".//b/a/@href")
-        c.link ||= item.xpath(".//a/@href")
+        country.cities_link = item.xpath(".//b/a/@href")
+        country.cities_link ||= item.xpath(".//a/@href")
 
-        c.name = item.xpath(".//a[last()]/@title")
+        country.name = item.xpath(".//a[last()]/@title")[0].value
 
-        c.link ||= item.xpath(".//i/a/@href")
+        country.cities_link ||= item.xpath(".//i/a/@href")
 
-        if c.name.nil?
-          c.name = item.xpath(".//i/text()")
-          c.name.sub!(/^See\s+for\s*/, '')
+        if country.name.nil?
+          country.name = item.xpath(".//i/text()")
+          country.name.sub!(/^See\s+for\s*/, '')
         end
 
-        c.save!
+        country.country_link = item.xpath(".//a[last()]/@href")[0].value
+
+        country.filled = false
+        country.cities_link = self.class.base_uri + country.cities_link
+        country.country_link = self.class.base_uri + country.country_link
+
+        country.save!
+        sleep(Random.rand(15))
+      end
+
+      begin
+        break if ul.previous.id == 'Z'
+      rescue NoMethodError
       end
     end
   end
