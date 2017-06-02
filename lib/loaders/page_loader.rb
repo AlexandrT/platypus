@@ -14,6 +14,8 @@ class PageLoader
 
     code = response.code.to_i
 
+    page = response.body.gsub(/\n/, '')
+
     case code
     when 200
       parse_countries(response.body)
@@ -28,6 +30,11 @@ class PageLoader
     uls = page.xpath("//div[@id='mw-content-text']/ul")
 
     uls.each do |ul|
+      begin
+        break if ul.previous_sibling.xpath(".//span")[0].attribute("id").value == 'See_also'
+      rescue NoMethodError
+      end
+
       items = ul.xpath(".//li")
 
       items.each do |item|
@@ -53,11 +60,6 @@ class PageLoader
 
         country.save!
         sleep(Random.rand(15))
-      end
-
-      begin
-        break if ul.previous.id == 'Z'
-      rescue NoMethodError
       end
     end
   end
