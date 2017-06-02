@@ -18,7 +18,7 @@ class PageLoader
 
     case code
     when 200
-      parse_countries(response.body)
+      parse_countries(page)
     else
       puts "Strange response code during list load - #{code.to_s}"
     end
@@ -26,8 +26,9 @@ class PageLoader
 
   def parse_countries(html)
     page = Nokogiri::HTML(html, nil, 'utf-8')
+#    page = File.open("wiki.html") { |f| Nokogiri::HTML(f) }
 
-    uls = page.xpath("//div[@id='mw-content-text']/ul")
+    uls = page.xpath("//div[@id='mw-content-text']/div/ul")
 
     uls.each do |ul|
       begin
@@ -47,9 +48,8 @@ class PageLoader
 
         country.cities_link ||= item.xpath(".//i/a/@href")
 
-        if country.name.nil?
-          country.name = item.xpath(".//i/text()")
-          country.name.sub!(/^See\s+for\s*/, '')
+        if item.at_xpath(".//i/a[@class='mw-redirect']")
+          next
         end
 
         country.country_link = item.xpath(".//a[last()]/@href")[0].value
@@ -61,6 +61,21 @@ class PageLoader
         country.save!
         sleep(Random.rand(15))
       end
+    end
+  end
+
+  def load_cities(url)
+    response = self.class.get(url)
+
+    code = response.code.to_i
+
+    page = response.body.gsub(/\n/, '')
+
+    case code
+    when 200
+      parse_countries(page)
+    else
+      puts "Strange response code during list load - #{code.to_s}"
     end
   end
 end
